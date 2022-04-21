@@ -8,16 +8,25 @@ use std::{
 
 fn main() -> Result<()> {
     let input = get_input("input.txt")?;
-    let first = input.iter().next().unwrap();
+    let mut input = input.iter();
+
+    let (first, second, third) = (
+        input.next().unwrap(),
+        input.next().unwrap(),
+        input.next().unwrap(),
+    );
 
     let count = input
-        .iter()
-        .fold((0, first), |(count, prec), curr| match prec < curr {
-            true => (count + 1, curr),
-            false => (count, curr),
-        });
+        .fold(
+            (0, (first, second, third)),
+            |(count, (f, s, t)), curr| match (f + s + t) < (s + t + curr) {
+                true => (count + 1, (s, t, curr)),
+                false => (count, (s, t, curr)),
+            },
+        )
+        .0;
 
-    println!("answer: {}", count.0);
+    println!("answer: {}", count);
 
     Ok(())
 }
