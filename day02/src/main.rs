@@ -46,10 +46,10 @@ fn main() -> Result<()> {
     let input = get_input("input.txt")?;
     let input = input.iter();
 
-    let (pos, dep) = input.fold((0, 0), |(p, d), curr| match curr {
-        Command::Forward(n) => (p + n, d),
-        Command::Up(n) => (p, d - n),
-        Command::Down(n) => (p, d + n),
+    let (pos, dep, _) = input.fold((0, 0, 0), |(p, d, a), curr| match curr {
+        Command::Forward(n) => (p + n, d + n * a, a),
+        Command::Up(n) => (p, d, a - n),
+        Command::Down(n) => (p, d, a + n),
     });
 
     println!("answer: {}", pos * dep);
