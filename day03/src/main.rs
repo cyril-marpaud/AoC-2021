@@ -1,3 +1,5 @@
+mod binaryrep;
+
 use anyhow::{Context, Result};
 use std::{
     self,
@@ -8,18 +10,16 @@ use std::{
 
 fn main() -> Result<()> {
     let input = get_input("input.txt")?;
-    let mut input = input.iter();
-    let mut ones = vec![0u32; 12];
+    let input = input.iter();
 
-    while let Some(s) = input.next() {
-        for (i, c) in s.chars().enumerate() {
-            if c == '1' {
-                ones[i] += 1;
-            }
-        }
-    }
+    let binary_rep = "0".repeat(12).parse::<binaryrep::BinaryRep>()?;
+
+    let ones = input.fold(binary_rep, |b_r, curr| {
+        b_r + curr.parse::<binaryrep::BinaryRep>().unwrap()
+    });
 
     let gamma_rate_string = ones
+        .0
         .into_iter()
         .map(|n| if n > 500 { '1' } else { '0' })
         .collect::<String>();
