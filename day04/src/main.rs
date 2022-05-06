@@ -31,11 +31,22 @@ impl<const N: usize> FromStr for Board<N> {
 	}
 }
 
+impl<const N: usize> Board<N> {
+	fn has_number(&self, number: &u32) -> Option<(usize, usize)> {
+		match self.data.iter().position(|&x| x == *number) {
+			Some(p) => Some((p as usize / BOARD_WIDTH, p as usize % BOARD_WIDTH)),
+			None => None,
+		}
+	}
+}
+
 fn main() -> Result<()> {
 	let (draws, boards) = get_input("input.txt")?;
 
-	println!("draws: {:?}", draws);
-	println!("boards: {:?}", boards);
+	// println!("draws: {:?}", draws);
+	// println!("boards: {:?}", boards);
+
+	println!("coords: {:?}", boards[0].has_number(&59).unwrap());
 
 	Ok(())
 }
