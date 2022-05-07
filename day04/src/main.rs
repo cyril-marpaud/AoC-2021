@@ -13,17 +13,17 @@ const BOARD_SIZE: usize = BOARD_WIDTH * BOARD_HEIGHT;
 
 #[derive(Debug)]
 struct Board<const N: usize> {
-	data: [u32; N],
+	data: [Option<u32>; N],
 }
 
 impl<const N: usize> FromStr for Board<N> {
 	type Err = anyhow::Error;
 
 	fn from_str(s: &str) -> Result<Self> {
-		let data: [u32; N] = s
+		let data: [Option<u32>; N] = s
 			.split_whitespace()
-			.map(|n| n.parse::<u32>().unwrap())
-			.collect::<Vec<u32>>()
+			.map(|n| Some(n.parse::<u32>().unwrap()))
+			.collect::<Vec<Option<u32>>>()
 			.try_into()
 			.unwrap();
 
@@ -32,21 +32,25 @@ impl<const N: usize> FromStr for Board<N> {
 }
 
 impl<const N: usize> Board<N> {
-	fn has_number(&self, number: &u32) -> Option<(usize, usize)> {
-		match self.data.iter().position(|&x| x == *number) {
-			Some(p) => Some((p as usize / BOARD_WIDTH, p as usize % BOARD_WIDTH)),
+	fn has_number(&mut self, number: &u32) -> Option<(usize, usize)> {
+		match self.data.iter().position(|&x| x == Some(*number)) {
+			Some(p) => {
+				self.data[p] = None;
+				Some((p as usize / BOARD_WIDTH, p as usize % BOARD_WIDTH))
+			}
 			None => None,
 		}
 	}
 }
 
 fn main() -> Result<()> {
-	let (draws, boards) = get_input("input.txt")?;
+	let (draws, mut boards) = get_input("input.txt")?;
 
 	// println!("draws: {:?}", draws);
 	// println!("boards: {:?}", boards);
 
-	println!("coords: {:?}", boards[0].has_number(&59).unwrap());
+	println!("coords: {:?}", boards[0].has_number(&52).unwrap());
+	println!("board: {:?}", boards[0]);
 
 	Ok(())
 }
