@@ -3,6 +3,7 @@ use std::{
 	self,
 	fs::File,
 	io::{prelude::*, BufReader},
+	ops::ControlFlow,
 	path::Path,
 	str::FromStr,
 };
@@ -60,11 +61,24 @@ impl<const N: usize> Board<N> {
 fn main() -> Result<()> {
 	let (draws, mut boards) = get_input("input.txt")?;
 
-	// println!("draws: {:?}", draws);
-	// println!("boards: {:?}", boards);
+	let (draw, board) = match draws.iter().try_for_each(|d| {
+		return boards.iter_mut().try_for_each(|b| {
+			if let Some(coords) = b.has_number(d) {
+				if b.is_winning(coords) {
+					return ControlFlow::Break((d, b.data));
+				}
+			}
+			return ControlFlow::Continue(());
+		});
+	}) {
+		ControlFlow::Continue(()) => Err(anyhow!("No winner")),
+		ControlFlow::Break(db) => Ok(db),
+	}?;
 
-	println!("coords: {:?}", boards[0].has_number(&52).unwrap());
-	println!("board: {:?}", boards[0]);
+	println!(
+		"answer: {}",
+		draw * board.iter().map(|n| n.unwrap_or(0)).sum::<u32>()
+	);
 
 	Ok(())
 }
