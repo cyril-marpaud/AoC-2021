@@ -41,6 +41,20 @@ impl<const N: usize> Board<N> {
 			None => None,
 		}
 	}
+
+	fn is_winning(&self, (row, col): (usize, usize)) -> bool {
+		self.data
+			.iter()
+			.skip(BOARD_WIDTH * row)
+			.take(BOARD_WIDTH)
+			.all(Option::is_none)
+			|| self
+				.data
+				.iter()
+				.skip(col)
+				.step_by(BOARD_WIDTH)
+				.all(Option::is_none)
+	}
 }
 
 fn main() -> Result<()> {
@@ -57,7 +71,7 @@ fn main() -> Result<()> {
 
 fn get_input(filename: impl AsRef<Path>) -> Result<(Vec<u32>, Vec<Board<BOARD_SIZE>>)> {
 	let file = File::open(filename).with_context(|| "Can't open file")?;
-	let mut lines = BufReader::new(file).lines().map(|l| l.unwrap());
+	let mut lines = BufReader::new(file).lines().map(Result::unwrap);
 
 	Ok((
 		lines
