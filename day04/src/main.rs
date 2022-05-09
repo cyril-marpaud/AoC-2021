@@ -1,9 +1,8 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use std::{
 	self,
 	fs::File,
 	io::{prelude::*, BufReader},
-	ops::ControlFlow,
 	path::Path,
 	str::FromStr,
 };
@@ -60,24 +59,42 @@ impl<const N: usize> Board<N> {
 
 fn main() -> Result<()> {
 	let (draws, mut boards) = get_input("input.txt")?;
+	let mut draws = draws.iter();
 
-	let (draw, board) = match draws.iter().try_for_each(|d| {
-		return boards.iter_mut().try_for_each(|b| {
-			if let Some(coords) = b.has_number(d) {
-				if b.is_winning(coords) {
-					return ControlFlow::Break((d, b.data));
+	// Determine the last winning board
+	let mut board = loop {
+		let draw = draws.next().unwrap();
+		let mut temp_boards = Vec::new();
+
+		for board in &mut boards {
+			match board.has_number(draw) {
+				None => temp_boards.push(Board { data: board.data }),
+				Some(coords) if !board.is_winning(coords) => {
+					temp_boards.push(Board { data: board.data })
 				}
+				_ => (),
 			}
-			return ControlFlow::Continue(());
-		});
-	}) {
-		ControlFlow::Continue(()) => Err(anyhow!("No winner")),
-		ControlFlow::Break(db) => Ok(db),
-	}?;
+		}
+
+		if temp_boards.len() != 1 {
+			boards = temp_boards;
+		} else {
+			break temp_boards.pop().unwrap();
+		}
+	};
+
+	// Play until the last board wins
+	let (draw, board) = loop {
+		let draw = draws.next().unwrap();
+		match board.has_number(draw) {
+			Some(coords) if board.is_winning(coords) => break (draw, board),
+			_ => (),
+		}
+	};
 
 	println!(
 		"answer: {}",
-		draw * board.iter().map(|n| n.unwrap_or(0)).sum::<u32>()
+		draw * board.data.iter().map(|n| n.unwrap_or(0)).sum::<u32>()
 	);
 
 	Ok(())
