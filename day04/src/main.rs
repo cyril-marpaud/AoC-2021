@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 use anyhow::{Context, Result};
 use std::{
 	self,
@@ -64,7 +67,7 @@ fn main() -> Result<()> {
 	// Determine the last winning board
 	let mut board = loop {
 		let draw = draws.next().unwrap();
-		let mut temp_boards = Vec::new();
+		let mut temp_boards = Vec::with_capacity(boards.len());
 
 		boards.iter_mut().for_each(|b| match b.has_number(draw) {
 			Some(coords) if b.is_winning(coords) => (),
@@ -112,4 +115,15 @@ fn get_input(filename: impl AsRef<Path>) -> Result<(Vec<u32>, Vec<Board<BOARD_SI
 			.map(|c| c.join(" ").parse().unwrap())
 			.collect(),
 	))
+}
+
+#[cfg(test)]
+mod tests {
+	use super::main;
+	use test::Bencher;
+
+	#[bench]
+	fn bench_main(b: &mut Bencher) {
+		b.iter(|| main());
+	}
 }
