@@ -66,21 +66,15 @@ fn main() -> Result<()> {
 		let draw = draws.next().unwrap();
 		let mut temp_boards = Vec::new();
 
-		for board in &mut boards {
-			match board.has_number(draw) {
-				None => temp_boards.push(Board { data: board.data }),
-				Some(coords) if !board.is_winning(coords) => {
-					temp_boards.push(Board { data: board.data })
-				}
-				_ => (),
-			}
-		}
+		boards.iter_mut().for_each(|b| match b.has_number(draw) {
+			Some(coords) if b.is_winning(coords) => (),
+			_ => temp_boards.push(Board { data: b.data }),
+		});
 
-		if temp_boards.len() != 1 {
-			boards = temp_boards;
-		} else {
+		if temp_boards.len() == 1 {
 			break temp_boards.pop().unwrap();
 		}
+		boards = temp_boards;
 	};
 
 	// Play until the last board wins
