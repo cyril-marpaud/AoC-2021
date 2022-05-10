@@ -24,26 +24,15 @@ impl FromStr for Line {
 			.replace(" -> ", ",")
 			.split(',')
 			.map(|n| n.parse().unwrap())
+			.rev()
 			.collect::<Vec<usize>>();
 
-		let (mut y2, mut x2, mut y1, mut x1) = (
-			line.pop().unwrap(),
-			line.pop().unwrap(),
-			line.pop().unwrap(),
-			line.pop().unwrap(),
-		);
-
-		if x1 == x2 && y1 > y2 {
-			let temp = y1;
-			y1 = y2;
-			y2 = temp;
-		} else if y1 == y2 && x1 > x2 {
-			let temp = x1;
-			x1 = x2;
-			x2 = temp;
-		}
-
-		Ok(Line { x1, y1, x2, y2 })
+		Ok(Line {
+			x1: line.pop().unwrap(),
+			y1: line.pop().unwrap(),
+			x2: line.pop().unwrap(),
+			y2: line.pop().unwrap(),
+		})
 	}
 }
 
@@ -63,21 +52,28 @@ impl Floor {
 		}
 	}
 
-	fn map_straight_line(&mut self, l: &Line) {
-		let range: Vec<_> = if l.x1 == l.x2 {
+	fn map_line(&mut self, l: &Line) {
+		let xrange: Vec<_> = if l.x1 == l.x2 {
 			iter::repeat(l.x1)
-				.take(l.y2 - l.y1 + 1)
-				.zip(l.y1..=l.y2)
+				.take((i32::abs(l.y2 as i32 - l.y1 as i32) + 1) as usize)
 				.collect()
-		} else if l.y1 == l.y2 {
-			(l.x1..=l.x2)
-				.zip(iter::repeat(l.y1).take(l.x2 - l.x1 + 1))
-				.collect()
+		} else if l.x1 < l.x2 {
+			(l.x1..=l.x2).collect()
 		} else {
-			panic!("Not a straight line");
+			(l.x2..=l.x1).rev().collect()
 		};
 
-		range.iter().for_each(|(x, y)| {
+		let yrange: Vec<_> = if l.y1 == l.y2 {
+			iter::repeat(l.y1)
+				.take((i32::abs(l.x2 as i32 - l.x1 as i32) + 1) as usize)
+				.collect()
+		} else if l.y1 < l.y2 {
+			(l.y1..=l.y2).collect()
+		} else {
+			(l.y2..=l.y1).rev().collect()
+		};
+
+		xrange.iter().zip(yrange).for_each(|(x, y)| {
 			self.data[x * Floor::FLOOR_WIDTH + y] += 1;
 		});
 	}
@@ -101,11 +97,8 @@ fn main() -> Result<()> {
 	let lines = get_input("input.txt")?;
 	let mut floor = Floor::new();
 
-	// map each straight line on the floor
-	lines
-		.iter()
-		.filter(|l| l.x1 == l.x2 || l.y1 == l.y2) // straight lines only
-		.for_each(|l| floor.map_straight_line(l));
+	// map each line on the floor
+	lines.iter().for_each(|l| floor.map_line(l));
 
 	//floor.display();
 
