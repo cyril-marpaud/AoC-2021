@@ -41,6 +41,20 @@ struct Floor {
 	data: [u32; Floor::FLOOR_SIZE],
 }
 
+impl Line {
+	fn get_range(coords1: (usize, usize), coords2: (usize, usize)) -> Vec<usize> {
+		if coords1.0 == coords2.0 {
+			iter::repeat(coords1.0)
+				.take((i32::abs(coords2.1 as i32 - coords1.1 as i32) + 1) as usize)
+				.collect()
+		} else if coords1.0 < coords2.0 {
+			(coords1.0..=coords2.0).collect()
+		} else {
+			(coords2.0..=coords1.0).rev().collect()
+		}
+	}
+}
+
 impl Floor {
 	const FLOOR_WIDTH: usize = 1000;
 	const FLOOR_HEIGHT: usize = 1000;
@@ -53,25 +67,10 @@ impl Floor {
 	}
 
 	fn map_line(&mut self, l: &Line) {
-		let xrange: Vec<_> = if l.x1 == l.x2 {
-			iter::repeat(l.x1)
-				.take((i32::abs(l.y2 as i32 - l.y1 as i32) + 1) as usize)
-				.collect()
-		} else if l.x1 < l.x2 {
-			(l.x1..=l.x2).collect()
-		} else {
-			(l.x2..=l.x1).rev().collect()
-		};
-
-		let yrange: Vec<_> = if l.y1 == l.y2 {
-			iter::repeat(l.y1)
-				.take((i32::abs(l.x2 as i32 - l.x1 as i32) + 1) as usize)
-				.collect()
-		} else if l.y1 < l.y2 {
-			(l.y1..=l.y2).collect()
-		} else {
-			(l.y2..=l.y1).rev().collect()
-		};
+		let (xrange, yrange) = (
+			Line::get_range((l.x1, l.y1), (l.x2, l.y2)),
+			Line::get_range((l.y1, l.x1), (l.y2, l.x2)),
+		);
 
 		xrange.iter().zip(yrange).for_each(|(x, y)| {
 			self.data[x * Floor::FLOOR_WIDTH + y] += 1;
