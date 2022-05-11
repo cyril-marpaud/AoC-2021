@@ -24,7 +24,10 @@ impl Crabs {
 		self.distribution
 			.iter()
 			.enumerate()
-			.map(|(p, &nb_crabs)| pos.abs_diff(p) * nb_crabs)
+			.map(|(p, &nb_crabs)| {
+				let dist = pos.abs_diff(p);
+				dist * (dist + 1) / 2 * nb_crabs // n first ints' sum is n(n+1)/2
+			})
 			.sum()
 	}
 }
