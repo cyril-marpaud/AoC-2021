@@ -7,54 +7,49 @@ use std::{
 };
 
 #[derive(Debug)]
-struct Lanternfish {
-	timer: usize,
+struct Lanternfishes {
+	numbers: [usize; Lanternfishes::TIMER_MAX + 1],
 }
 
-impl Lanternfish {
-	fn new(t: Option<usize>) -> Self {
-		Lanternfish {
-			timer: t.unwrap_or(8),
+impl Lanternfishes {
+	const TIMER_MAX: usize = 8;
+
+	fn new() -> Self {
+		Lanternfishes {
+			numbers: [0; Lanternfishes::TIMER_MAX + 1],
 		}
 	}
 
-	fn simulate_one_day(&mut self) -> Option<Lanternfish> {
-		if self.timer == 0 {
-			self.timer = 6;
-			Some(Lanternfish::new(None))
-		} else {
-			self.timer -= 1;
-			None
-		}
+	fn simulate_one_day(&mut self) {
+		let reset_fishes = self.numbers[0];
+		self.numbers.rotate_left(1);
+		self.numbers[6] += reset_fishes;
 	}
 }
 
 fn main() -> Result<()> {
 	let mut fishes = get_input("input.txt")?;
-	let mut new_fishes = Vec::new();
-	let simulation_days = 80;
+	let simulation_days = 256;
 
 	(1..=simulation_days).for_each(|_| {
-		fishes.iter_mut().for_each(|f| {
-			if let Some(fish) = f.simulate_one_day() {
-				new_fishes.push(fish)
-			}
-		});
-		fishes.append(&mut new_fishes);
+		fishes.simulate_one_day();
 	});
 
-	println!("answer: {}", fishes.len());
+	println!("answer: {}", fishes.numbers.iter().sum::<usize>());
 	Ok(())
 }
 
-fn get_input(filename: impl AsRef<Path>) -> Result<Vec<Lanternfish>> {
+fn get_input(filename: impl AsRef<Path>) -> Result<Lanternfishes> {
 	let file = File::open(filename).with_context(|| "Can't open file")?;
 	let mut lines = BufReader::new(file).lines().map(Result::unwrap);
 
-	Ok(lines
+	let mut fishes = Lanternfishes::new();
+
+	lines
 		.next()
 		.unwrap()
 		.split(',')
-		.map(|t| Lanternfish::new(Some(t.parse().unwrap())))
-		.collect())
+		.for_each(|f| fishes.numbers[f.parse::<usize>().unwrap()] += 1);
+
+	Ok(fishes)
 }
