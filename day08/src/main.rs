@@ -9,32 +9,28 @@ use std::{
 fn main() -> Result<()> {
 	let output_values = get_input("input.txt")?;
 
-	println!(
-		"answer: {}",
-		output_values.iter().fold(0, |acc, el| {
-			acc + el
-				.iter()
-				.filter(|sel| sel.len() == 2 || sel.len() == 3 || sel.len() == 4 || sel.len() == 7)
-				.count()
-		})
-	);
+	println!("out: {:#?}", output_values);
 
 	Ok(())
 }
 
-fn get_input(filename: impl AsRef<Path>) -> Result<Vec<Vec<String>>> {
+fn get_input(filename: impl AsRef<Path>) -> Result<Vec<(Vec<String>, Vec<String>)>> {
 	let file = File::open(filename).with_context(|| "Can't open file")?;
 	let lines = BufReader::new(file).lines().map(Result::unwrap);
 
 	Ok(lines
-		.map(|l| {
-			l.split(" | ")
-				.skip(1)
-				.next()
-				.unwrap()
-				.split_whitespace()
-				.map(|s| s.to_string())
-				.collect()
+		.map(|line| {
+			let mut dbl_vec = line
+				.split('|')
+				.map(|half_line| {
+					half_line
+						.split_whitespace()
+						.map(|digit| digit.to_string())
+						.collect()
+				})
+				.rev() // rev so that we can pop properly
+				.collect::<Vec<Vec<String>>>();
+			(dbl_vec.pop().unwrap(), dbl_vec.pop().unwrap())
 		})
 		.collect())
 }
