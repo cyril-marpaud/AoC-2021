@@ -30,12 +30,52 @@ impl Floor {
 			heights: [0; Floor::SIZE],
 		}
 	}
+
+	fn get_adjacent_locations(p: usize) -> Vec<usize> {
+		let mut locations = vec![];
+
+		if p > (Floor::WIDTH - 1) {
+			locations.push(p - Floor::WIDTH); // top
+		}
+		if p < (Floor::WIDTH * (Floor::HEIGHT - 1) - 1) {
+			locations.push(p + Floor::WIDTH); // bottom
+		}
+		if p % Floor::WIDTH != 0 {
+			locations.push(p - 1); // left
+		}
+		if (p + 1) % Floor::WIDTH != 0 {
+			locations.push(p + 1); // right
+		}
+
+		locations
+	}
+
+	fn get_low_points(&self) -> Vec<(usize, &u8)> {
+		self
+			.heights
+			.iter()
+			.enumerate()
+			.filter(|(p, &h)| {
+				let adj = Floor::get_adjacent_locations(*p);
+				adj.iter()
+					.map(|&loc| self.heights[loc])
+					.all(|adj_h| adj_h > h)
+			})
+			.collect()
+	}
 }
 
 fn main() -> Result<()> {
 	let floor = get_input("input.txt")?;
 
-	println!("floor: {:?}", floor);
+	println!(
+		"answer: {}",
+		floor
+			.get_low_points()
+			.iter()
+			.map(|(_, &h)| h as u32 + 1)
+			.sum::<u32>()
+	);
 
 	Ok(())
 }
