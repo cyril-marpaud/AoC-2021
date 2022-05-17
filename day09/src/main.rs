@@ -1,5 +1,5 @@
 use anyhow::{Context, Error, Result};
-use std::{self, fs::File, io::prelude::Read, path::Path, str::FromStr};
+use std::{self, cmp::Ordering, fs::File, io::prelude::Read, path::Path, str::FromStr};
 
 #[derive(Debug)]
 struct Floor {
@@ -31,50 +31,86 @@ impl Floor {
 		}
 	}
 
-	fn get_adjacent_locations(p: usize) -> Vec<usize> {
+	fn get_adjacent_coords(&self, p: usize) -> Vec<(usize, &u8)> {
 		let mut locations = vec![];
 
 		if p > (Floor::WIDTH - 1) {
-			locations.push(p - Floor::WIDTH); // top
-		}
-		if p < (Floor::WIDTH * (Floor::HEIGHT - 1) - 1) {
-			locations.push(p + Floor::WIDTH); // bottom
+			locations.push((p - Floor::WIDTH, &self.heights[p - Floor::WIDTH])); // top
 		}
 		if p % Floor::WIDTH != 0 {
-			locations.push(p - 1); // left
+			locations.push((p - 1, &self.heights[p - 1])); // left
 		}
 		if (p + 1) % Floor::WIDTH != 0 {
-			locations.push(p + 1); // right
+			locations.push((p + 1, &self.heights[p + 1])); // right
+		}
+		if p < (Floor::WIDTH * (Floor::HEIGHT - 1) - 1) {
+			locations.push((p + Floor::WIDTH, &self.heights[p + Floor::WIDTH])); // bottom
 		}
 
 		locations
 	}
 
-	fn get_low_points(&self) -> Vec<(usize, &u8)> {
+	fn get_low_points(&self) -> Vec<Vec<usize>> {
 		self
 			.heights
 			.iter()
 			.enumerate()
 			.filter(|(p, &h)| {
-				let adj = Floor::get_adjacent_locations(*p);
-				adj.iter()
-					.map(|&loc| self.heights[loc])
-					.all(|adj_h| adj_h > h)
+				self
+					.get_adjacent_coords(*p)
+					.iter()
+					.all(|(_, &adj_h)| adj_h > h)
 			})
+			.map(|(p, _)| vec![p])
 			.collect()
+	}
+
+	fn fill_basin<'a>(&self, basin: &'a mut Vec<usize>) -> &'a Vec<usize> {
+		let mut temp_basin = basin
+			.iter()
+			.map(|pos| {
+				self
+					.get_adjacent_coords(*pos)
+					.into_iter()
+					.filter(|(p, &h)| h != 9 && !basin.contains(p))
+					.map(|(p, _)| p)
+					.collect::<Vec<_>>()
+			})
+			.collect::<Vec<Vec<_>>>()
+			.concat();
+
+		if temp_basin.len() == 0 {
+			return basin;
+		}
+
+		basin.append(&mut temp_basin);
+		basin.sort();
+		basin.dedup();
+
+		self.fill_basin(basin)
 	}
 }
 
 fn main() -> Result<()> {
 	let floor = get_input("input.txt")?;
 
+	let mut low_points = floor.get_low_points();
+
+	let mut basins = low_points
+		.iter_mut()
+		.map(|b| floor.fill_basin(b))
+		.collect::<Vec<_>>();
+
+	basins.sort_by(|a, b| match a.len() as i32 - b.len() as i32 {
+		// inverted because we want them in descending order
+		l if l < 0 => Ordering::Greater,
+		l if l > 0 => Ordering::Less,
+		_ => Ordering::Equal,
+	});
+
 	println!(
-		"answer: {}",
-		floor
-			.get_low_points()
-			.iter()
-			.map(|(_, &h)| h as u32 + 1)
-			.sum::<u32>()
+		"answer: {:?}",
+		basins.iter().take(3).map(|b| b.len()).product::<usize>()
 	);
 
 	Ok(())
