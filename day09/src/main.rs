@@ -2,7 +2,9 @@
 extern crate test;
 
 use anyhow::{Context, Error, Result};
-use std::{self, cmp::Reverse, fs::File, io::prelude::Read, path::Path, str::FromStr};
+use std::{
+	self, cmp::Reverse, collections::HashSet, fs::File, io::prelude::Read, path::Path, str::FromStr,
+};
 
 #[derive(Debug)]
 struct Floor {
@@ -53,7 +55,7 @@ impl Floor {
 		locations
 	}
 
-	fn get_low_points(&self) -> Vec<Vec<usize>> {
+	fn get_low_points(&self) -> Vec<HashSet<usize>> {
 		self
 			.heights
 			.iter()
@@ -64,31 +66,29 @@ impl Floor {
 					.iter()
 					.all(|(_, &adj_h)| adj_h > h)
 			})
-			.map(|(p, _)| vec![p])
+			.map(|(p, _)| HashSet::from([p]))
 			.collect()
 	}
 
-	fn fill_basin<'a>(&self, basin: &'a mut Vec<usize>) -> &'a Vec<usize> {
-		let mut temp_basin = basin
-			.iter()
-			.map(|pos| {
+	fn fill_basin<'a>(&self, basin: &'a mut HashSet<usize>) -> &'a HashSet<usize> {
+		let basin_size = basin.len();
+		let mut basin_expansion = HashSet::new();
+
+		basin.iter().for_each(|pos| {
+			basin_expansion.extend(
 				self
 					.get_adjacent_coords(*pos)
-					.into_iter()
+					.iter()
 					.filter(|(p, &h)| h != 9 && !basin.contains(p))
-					.map(|(p, _)| p)
-					.collect::<Vec<_>>()
-			})
-			.collect::<Vec<Vec<_>>>()
-			.concat();
+					.map(|(p, _)| *p),
+			);
+		});
 
-		if temp_basin.is_empty() {
+		basin.extend(basin_expansion);
+
+		if basin_size == basin.len() {
 			return basin;
 		}
-
-		basin.append(&mut temp_basin);
-		basin.sort_unstable();
-		basin.dedup();
 
 		self.fill_basin(basin)
 	}
