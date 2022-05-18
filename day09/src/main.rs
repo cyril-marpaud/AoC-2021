@@ -1,5 +1,5 @@
 use anyhow::{Context, Error, Result};
-use std::{self, fs::File, io::prelude::Read, path::Path, str::FromStr};
+use std::{self, cmp::Reverse, fs::File, io::prelude::Read, path::Path, str::FromStr};
 
 #[derive(Debug)]
 struct Floor {
@@ -79,12 +79,12 @@ impl Floor {
 			.collect::<Vec<Vec<_>>>()
 			.concat();
 
-		if temp_basin.len() == 0 {
+		if temp_basin.is_empty() {
 			return basin;
 		}
 
 		basin.append(&mut temp_basin);
-		basin.sort();
+		basin.sort_unstable();
 		basin.dedup();
 
 		self.fill_basin(basin)
@@ -102,7 +102,7 @@ fn main() -> Result<()> {
 		.collect::<Vec<_>>();
 
 	// we want to sort in descending order
-	basins.sort_by(|a, b| b.len().cmp(&a.len()));
+	basins.sort_unstable_by_key(|a| Reverse(a.len()));
 
 	println!(
 		"answer: {:?}",
