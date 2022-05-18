@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 use anyhow::{Context, Error, Result};
 use std::{self, cmp::Reverse, fs::File, io::prelude::Read, path::Path, str::FromStr};
 
@@ -118,4 +121,15 @@ fn get_input(filename: impl AsRef<Path>) -> Result<Floor> {
 	file.read_to_string(&mut buffer)?;
 
 	Ok(buffer.parse().unwrap())
+}
+
+#[cfg(test)]
+mod tests {
+	use super::main;
+	use test::Bencher;
+
+	#[bench]
+	fn bench_main(b: &mut Bencher) {
+		b.iter(|| main());
+	}
 }
