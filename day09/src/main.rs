@@ -1,5 +1,5 @@
 use anyhow::{Context, Error, Result};
-use std::{self, cmp::Ordering, fs::File, io::prelude::Read, path::Path, str::FromStr};
+use std::{self, fs::File, io::prelude::Read, path::Path, str::FromStr};
 
 #[derive(Debug)]
 struct Floor {
@@ -101,12 +101,8 @@ fn main() -> Result<()> {
 		.map(|b| floor.fill_basin(b))
 		.collect::<Vec<_>>();
 
-	basins.sort_by(|a, b| match a.len() as i32 - b.len() as i32 {
-		// inverted because we want them in descending order
-		l if l < 0 => Ordering::Greater,
-		l if l > 0 => Ordering::Less,
-		_ => Ordering::Equal,
-	});
+	// we want to sort in descending order
+	basins.sort_by(|a, b| b.len().cmp(&a.len()));
 
 	println!(
 		"answer: {:?}",
