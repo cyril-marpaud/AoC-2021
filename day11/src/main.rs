@@ -3,7 +3,7 @@ use core::{
 	fmt::{Display, Formatter},
 	str::FromStr,
 };
-use std::{self, fs::File, io::prelude::Read, path::Path};
+use std::{self, collections::HashSet, fs::File, io::prelude::Read, path::Path};
 
 #[derive(Clone, Copy)]
 struct Octopus {
@@ -101,13 +101,16 @@ impl Octopi {
 		}
 	}
 
-	fn step_once(&mut self) {
+	fn step_once(&mut self) -> bool {
 		self.grid.iter_mut().for_each(|o| {
 			o.has_flashed = false;
 			o.energy_lvl += 1
 		});
 
+		let mut flashes: HashSet<usize> = HashSet::new();
+
 		while let Some(octopi) = self.get_flashing_octopi() {
+			flashes.extend(octopi.iter());
 			octopi.iter().for_each(|o| self.flash(o))
 		}
 
@@ -116,18 +119,26 @@ impl Octopi {
 			.iter_mut()
 			.filter(|o| o.has_flashed)
 			.for_each(|o| o.energy_lvl = 0);
+
+		if flashes.len() == Octopi::SIZE {
+			return true;
+		}
+		false
 	}
 }
 
 fn main() -> Result<()> {
 	let mut octopi = get_input("input.txt")?;
-	let steps = 100;
+	let mut step = 0;
 
-	(0..steps).for_each(|_| {
-		octopi.step_once();
-	});
+	let first_sync_step = loop {
+		step += 1;
+		if octopi.step_once() {
+			break step;
+		}
+	};
 
-	println!("answer: {}", octopi.flash_count);
+	println!("answer: {}", first_sync_step);
 
 	Ok(())
 }
