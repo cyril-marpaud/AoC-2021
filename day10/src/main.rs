@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use std::{
 	self,
-	collections::HashMap,
 	fs::File,
 	io::{prelude::*, BufReader},
 	path::Path,
@@ -11,7 +10,7 @@ use std::{
 struct Line(String);
 
 impl Line {
-	fn is_corrupt(&self) -> Option<char> {
+	fn build_vec(&self) -> Option<Vec<char>> {
 		let mut chunk = Vec::new();
 
 		for char in self.0.chars() {
@@ -20,37 +19,46 @@ impl Line {
 				'[' => chunk.push(']'),
 				'{' => chunk.push('}'),
 				'<' => chunk.push('>'),
-				character @ _ => {
+				character => {
 					match chunk.pop() {
 						Some(expected) if character == expected => (),
-						_ => return Some(character),
+						_ => return None,
 					};
 				}
 			}
 		}
 
-		None
+		chunk.reverse();
+		Some(chunk)
+	}
+
+	fn compute_score(&self) -> Option<u64> {
+		self.build_vec().map(|vec| {
+			vec.iter().fold(0, |acc, el| {
+				5 * acc
+					+ match el {
+						')' => 1,
+						']' => 2,
+						'}' => 3,
+						'>' => 4,
+						_ => panic!(),
+					}
+			})
+		})
 	}
 }
 
 fn main() -> Result<()> {
 	let lines = get_input("input.txt")?;
 
-	let chars_value = HashMap::from([
-		(None, 0),
-		(Some(')'), 3),
-		(Some(']'), 57),
-		(Some('}'), 1197),
-		(Some('>'), 25137),
-	]);
+	let mut scores = lines
+		.iter()
+		.filter_map(|l| l.compute_score())
+		.collect::<Vec<_>>();
 
-	println!(
-		"answer: {}",
-		lines
-			.iter()
-			.map(|l| chars_value.get(&l.is_corrupt()).expect("unknown character"))
-			.sum::<u32>()
-	);
+	scores.sort_unstable();
+
+	println!("answer: {}", scores[scores.len() / 2]);
 
 	Ok(())
 }
@@ -59,5 +67,5 @@ fn get_input(filename: impl AsRef<Path>) -> Result<Vec<Line>> {
 	let file = File::open(filename).with_context(|| "Can't open file")?;
 	let lines = BufReader::new(file).lines().map(Result::unwrap);
 
-	Ok(lines.map(|l| Line(l)).collect())
+	Ok(lines.map(Line).collect())
 }
