@@ -24,7 +24,10 @@ impl Cave {
 				.get(el.last().unwrap())
 				.unwrap()
 				.iter()
-				.filter(|cave| Cave::is_big_cave(cave) || !el.contains(cave))
+				.filter(|cave| {
+					Cave::is_big_cave(cave)
+						|| !el.contains(cave) || Cave::has_unique_small_caves(el.clone())
+				})
 				.for_each(|step| {
 					let mut temp_el = el.clone();
 					temp_el.push(step.clone());
@@ -39,6 +42,13 @@ impl Cave {
 
 	fn is_big_cave(cave: &str) -> bool {
 		cave.chars().nth(0).unwrap().is_uppercase()
+	}
+
+	fn has_unique_small_caves(vec: Vec<String>) -> bool {
+		let mut uniq = HashSet::new();
+		vec.iter()
+			.filter(|cave| !Cave::is_big_cave(cave))
+			.all(move |x| uniq.insert(x))
 	}
 
 	fn map_paths(&self) -> Vec<Vec<String>> {
