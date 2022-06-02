@@ -1,6 +1,7 @@
 use std::{
 	self,
 	cmp::{Ord, Ordering, PartialOrd},
+	fmt::Display,
 	fs::File,
 	io::{prelude::*, BufReader},
 	path::Path,
@@ -10,6 +11,27 @@ use anyhow::{Context, Result};
 
 #[derive(Debug)]
 struct Fold(char, u32);
+
+struct Grid([char; Grid::GRID_SIZE]);
+
+impl Grid {
+	const GRID_HEIGHT: usize = 6;
+	const GRID_WIDTH: usize = 39;
+	const GRID_SIZE: usize = Grid::GRID_WIDTH * Grid::GRID_HEIGHT;
+
+	fn new() -> Self {
+		Grid(['_'; Grid::GRID_SIZE])
+	}
+}
+
+impl Display for Grid {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		self.0
+			.chunks(Grid::GRID_WIDTH)
+			.try_for_each(|el| writeln!(f, "{:?}", el))?;
+		Ok(())
+	}
+}
 
 #[derive(Debug, Eq)]
 struct Point(u32, u32);
@@ -57,13 +79,18 @@ impl Ord for Point {
 fn main() -> Result<()> {
 	let (mut points, folds) = get_input("input.txt")?;
 
-	let fold = folds.iter().next().unwrap();
-	points.iter_mut().for_each(|point| point.fold(fold));
+	folds.iter().for_each(|fold| {
+		points.iter_mut().for_each(|point| point.fold(fold));
+		points.sort();
+		points.dedup();
+	});
 
-	points.sort();
-	points.dedup();
+	let mut grid = Grid::new();
+	points
+		.into_iter()
+		.for_each(|Point(x, y)| grid.0[y as usize * Grid::GRID_WIDTH + x as usize] = '#');
 
-	println!("answer: {}", points.len());
+	println!("answer:\n{}", grid);
 
 	Ok(())
 }
