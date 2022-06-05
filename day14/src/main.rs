@@ -20,7 +20,7 @@ struct Rules(HashMap<Vec<char>, Vec<Vec<char>>>);
 fn main() -> Result<()> {
 	let (mut template, rules) = get_input("input.txt")?;
 
-	const STEPS: usize = 10;
+	const STEPS: usize = 40;
 
 	(1..=STEPS).for_each(|_| polymerize(&mut template, &rules));
 
