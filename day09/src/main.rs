@@ -48,7 +48,7 @@ impl Floor {
 		if (p + 1) % Floor::WIDTH != 0 {
 			locations.push((p + 1, &self.heights[p + 1])); // right
 		}
-		if p < (Floor::WIDTH * (Floor::HEIGHT - 1) - 1) {
+		if p < (Floor::SIZE - Floor::WIDTH) {
 			locations.push((p + Floor::WIDTH, &self.heights[p + Floor::WIDTH])); // bottom
 		}
 
