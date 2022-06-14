@@ -54,28 +54,24 @@ fn main() -> Result<()> {
 
 	let (speed_y_min, speed_y_max) = (target.y.start(), target.y.start().abs() - 1);
 
-	let mut max_height = 0;
+	let mut nb_initial_velocities = 0;
 
 	for speed_x in speed_x_min..=*speed_x_max {
 		for speed_y in *speed_y_min..=speed_y_max {
 			let mut probe = Probe::new((speed_x, speed_y), &target);
 
-			let mut temp_max_height = 0;
-
 			while !probe.has_overshot() {
 				probe.step();
 
-				temp_max_height = probe.pos_y.max(temp_max_height);
-
 				if probe.is_on_target() {
-					max_height = max_height.max(temp_max_height);
+					nb_initial_velocities += 1;
 					break;
 				}
 			}
 		}
 	}
 
-	println!("answer: {max_height}");
+	println!("answer: {nb_initial_velocities}");
 
 	Ok(())
 }
