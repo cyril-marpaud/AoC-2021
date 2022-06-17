@@ -46,9 +46,9 @@ impl SfnOperand {
 	}
 }
 
-impl Add for Sfn {
+impl<'a> Add for &'a Sfn {
 	type Output = Sfn;
-	fn add(self, rhs: Self) -> Self::Output {
+	fn add(self, rhs: &'a Sfn) -> Sfn {
 		Sfn::reduce(format!("[{},{}]", self, rhs).parse().unwrap())
 	}
 }
@@ -175,10 +175,17 @@ impl Sfn {
 }
 
 fn main() -> Result<()> {
-	let vec_sfn = get_input("input.txt")?;
-	let sfn = vec_sfn.into_iter().reduce(|acc, el| acc + el).unwrap();
+	let mut vec_sfn = get_input("input.txt")?;
 
-	println!("answer: {}", sfn.get_magnitude());
+	let mut maximums = Vec::new();
+	while let Some(sfn) = &vec_sfn.pop() {
+		maximums.push(vec_sfn.iter().fold(0, |acc, el| {
+			acc.max((sfn + el).get_magnitude())
+				.max((el + sfn).get_magnitude())
+		}));
+	}
+
+	println!("answer: {}", maximums.iter().max().unwrap());
 
 	Ok(())
 }
