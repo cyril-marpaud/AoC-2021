@@ -97,7 +97,7 @@ impl Picture {
 fn main() -> Result<()> {
 	let (e_algo, mut pic) = get_input("input.txt")?;
 
-	const ENHANCEMENTS: usize = 2;
+	const ENHANCEMENTS: usize = 50;
 	(0..ENHANCEMENTS).for_each(|_| pic.enhance(&e_algo));
 
 	println!("answer: {}", pic.get_pixels_count());
