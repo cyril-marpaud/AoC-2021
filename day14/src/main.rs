@@ -34,10 +34,7 @@ fn main() -> Result<()> {
 		});
 	});
 
-	let mut sorted_counts = Vec::from_iter(counts.values())
-		.iter()
-		.map(|&s| (s + 1) / 2)
-		.collect::<Vec<_>>();
+	let mut sorted_counts: Vec<_> = counts.values().map(|&s| (s + 1) / 2).collect();
 	sorted_counts.sort_unstable();
 
 	println!(
